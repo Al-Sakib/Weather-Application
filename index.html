@@ -1,11 +1,333 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="A responsive weather dashboard powered by the Open-Meteo API.">
+  <title>SkyCast | Weather Dashboard</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="style.css">
+  <script src="script.js" defer></script>
 </head>
+
 <body>
-    
+  <div class="app-shell">
+
+    <!-- Header -->
+    <header class="topbar">
+      <a class="brand" href="#" aria-label="SkyCast home">
+        <span class="brand-mark">☀</span>
+        <span>skycast<span class="brand-period">.</span></span>
+      </a>
+
+      <div class="topbar-actions">
+        <span class="live-label">
+          <span class="live-dot"></span>
+          LIVE WEATHER
+        </span>
+
+        <button class="unit-toggle" id="unitToggle" type="button">
+          °C <span>/</span> °F
+        </button>
+      </div>
+    </header>
+
+    <main>
+
+      <!-- Introduction -->
+      <section class="intro">
+        <div>
+          <p class="eyebrow">YOUR WEATHER, SIMPLIFIED</p>
+          <h1>Know before<br class="mobile-break"> you go.</h1>
+          <p class="intro-copy">
+            A clear view of the weather, wherever life takes you.
+          </p>
+        </div>
+
+        <div class="date-chip" id="todayLabel">
+          YOUR DAILY FORECAST
+        </div>
+      </section>
+
+      <!-- Search -->
+      <section class="search-panel" aria-label="Find a city">
+
+        <form id="searchForm" class="search-form">
+          <span class="search-icon">⌕</span>
+
+          <label class="visually-hidden" for="cityInput">
+            Search city
+          </label>
+
+          <input
+            id="cityInput"
+            type="search"
+            placeholder="Search a city (e.g. Chattogram)"
+            autocomplete="off"
+            required
+          >
+
+          <button class="search-button" type="submit">
+            Search <span>→</span>
+          </button>
+        </form>
+
+        <button
+          class="location-button"
+          id="locationButton"
+          type="button"
+        >
+          <span>◎</span> Use my location
+        </button>
+
+      </section>
+
+      <!-- Loading, Error and Welcome States -->
+      <section class="status-area" id="statusArea" aria-live="polite">
+
+        <div class="welcome-state" id="welcomeState">
+          <div class="welcome-icon">☁</div>
+
+          <h2>Where would you like to check?</h2>
+
+          <p>
+            Search for a city above or use your current location
+            to get started.
+          </p>
+
+          <div class="quick-cities">
+            <button type="button" class="quick-city" data-city="Dhaka">
+              Dhaka
+            </button>
+
+            <button type="button" class="quick-city" data-city="Chattogram">
+              Chattogram
+            </button>
+
+            <button type="button" class="quick-city" data-city="Cox's Bazar">
+              Cox's Bazar
+            </button>
+          </div>
+        </div>
+
+        <div class="loading-state hidden" id="loadingState">
+          <span class="loader"></span>
+          <p>Getting the latest forecast…</p>
+        </div>
+
+        <div class="error-state hidden" id="errorState" role="alert">
+          <span class="error-symbol">!</span>
+
+          <div>
+            <h2>We couldn't find that place.</h2>
+            <p id="errorMessage">
+              Check the spelling and try again.
+            </p>
+          </div>
+
+          <button id="retryButton" type="button" class="text-button">
+            Try again
+          </button>
+        </div>
+
+      </section>
+
+      <!-- Weather Content -->
+      <div id="weatherContent" class="hidden">
+
+        <!-- Current Weather and Details -->
+        <section class="weather-grid">
+
+          <!-- Current Weather -->
+          <article class="current-card">
+
+            <div class="current-card-top">
+              <div>
+                <p class="card-kicker">CURRENT WEATHER</p>
+                <h2 id="cityName">—</h2>
+                <p class="location-meta" id="locationMeta">—</p>
+              </div>
+
+              <button
+                id="saveFavoriteButton"
+                class="favorite-button"
+                type="button"
+                aria-label="Save this city to favorites"
+                title="Save favorite"
+              >
+                ♡
+              </button>
+            </div>
+
+            <div class="current-main">
+              <div class="weather-symbol" id="currentIcon">☀</div>
+
+              <div>
+                <div class="temperature" id="currentTemp">--°</div>
+                <p class="condition" id="currentCondition">—</p>
+              </div>
+            </div>
+
+            <p class="feels-like" id="feelsLike">
+              Feels like —
+            </p>
+
+            <div class="current-divider"></div>
+
+            <div class="high-low">
+              <span>
+                ↑ <strong id="todayHigh">—</strong>
+                <small>High</small>
+              </span>
+
+              <span>
+                ↓ <strong id="todayLow">—</strong>
+                <small>Low</small>
+              </span>
+
+              <span>
+                ☂ <strong id="rainChance">—</strong>
+                <small>Rain</small>
+              </span>
+            </div>
+
+          </article>
+
+          <!-- Weather Details -->
+          <article class="details-card">
+
+            <div class="section-heading">
+              <div>
+                <p class="card-kicker">WEATHER DETAILS</p>
+                <h2>Today's highlights</h2>
+              </div>
+
+              <span class="subtle-icon">✳</span>
+            </div>
+
+            <div class="details-grid">
+
+              <div class="detail-item">
+                <span class="detail-icon">💧</span>
+                <div>
+                  <p>Humidity</p>
+                  <strong id="humidity">—</strong>
+                </div>
+              </div>
+
+              <div class="detail-item">
+                <span class="detail-icon">↗</span>
+                <div>
+                  <p>Wind speed</p>
+                  <strong id="wind">—</strong>
+                </div>
+              </div>
+
+              <div class="detail-item">
+                <span class="detail-icon">🌡</span>
+                <div>
+                  <p>Feels like</p>
+                  <strong id="detailFeels">—</strong>
+                </div>
+              </div>
+
+              <div class="detail-item">
+                <span class="detail-icon">☀</span>
+                <div>
+                  <p>Sunrise</p>
+                  <strong id="sunrise">—</strong>
+                </div>
+              </div>
+
+              <div class="detail-item">
+                <span class="detail-icon">☾</span>
+                <div>
+                  <p>Sunset</p>
+                  <strong id="sunset">—</strong>
+                </div>
+              </div>
+
+              <div class="detail-item">
+                <span class="detail-icon">☔</span>
+                <div>
+                  <p>Rain chance</p>
+                  <strong id="detailRain">—</strong>
+                </div>
+              </div>
+
+            </div>
+          </article>
+
+        </section>
+
+        <!-- Five Day Forecast -->
+        <section class="forecast-section">
+
+          <div class="section-heading">
+            <div>
+              <p class="card-kicker">PLAN AHEAD</p>
+              <h2>5-day forecast</h2>
+            </div>
+
+            <span class="forecast-note">Daily outlook</span>
+          </div>
+
+          <div class="forecast-list" id="forecastList"></div>
+
+        </section>
+
+      </div>
+
+      <!-- Favorite Cities -->
+      <section class="favorites-section">
+
+        <div class="section-heading">
+          <div>
+            <p class="card-kicker">YOUR SHORTLIST</p>
+            <h2>Favorite cities</h2>
+          </div>
+
+          <span class="favorite-count" id="favoriteCount">
+            0 SAVED
+          </span>
+        </div>
+
+        <div id="favoritesList" class="favorites-list">
+          <p class="empty-favorites">
+            Your saved cities will appear here.
+            Search a city and tap ♡ to save it.
+          </p>
+        </div>
+
+      </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+
+      <a class="brand footer-brand" href="#">
+        <span class="brand-mark">☀</span>
+        <span>skycast<span class="brand-period">.</span></span>
+      </a>
+
+      <p>
+        Weather data provided by
+        <a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer">
+          Open-Meteo
+        </a>.
+        Built for CSE-2340 Mini Project 3–4.
+      </p>
+
+      <span>HTML · CSS · JavaScript</span>
+
+    </footer>
+
+  </div>
 </body>
 </html>
